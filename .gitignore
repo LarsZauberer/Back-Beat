@@ -123,4 +123,4 @@ dmypy.json
 .pyre/
 
 # my stuff
-#config.txt
+config.txt
