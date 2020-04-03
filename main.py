@@ -7,10 +7,12 @@ import pickle
 try:
     with open("config.txt", 'r') as f:
         content = f.read()
+        print(content)
         beat_saber_loc = content.split(", ")[0]
         backup_loc = content.split(", ")[1]
 except:
     print("Can't open config file")
+    sys.exit()
 
 if not os.path.exists(backup_loc):
     os.mkdir(backup_loc)
