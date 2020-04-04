@@ -1,0 +1,9 @@
+{
+    "default": true,
+    "heading-increment": false,
+    "line-length": false,
+    "blanks-around-headings": false,
+    "blanks-around-lists": false,
+    "no-inline-html": false,
+    "no-hard-tabs": false
+}
