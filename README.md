@@ -1,14 +1,13 @@
 # Beatup
 
-## Main and Development branches
+## Main.py
 My first attempt
 
-## Branch release GW
-
+## main_gw.py
 Recreated the script with modules/functions and command line arguments
 Usage is shown with the '--help' parameter.
 
-```
+``` bash
 usage: main_gw.py [-h] [-i {1} [{1} ...]] [-o] [-p] [-d] [-l] [-v] [--version]
 
 Backup Beat Saber
@@ -26,4 +25,3 @@ optional arguments:
 
 Thanks for using this backup tool
 ```
-
