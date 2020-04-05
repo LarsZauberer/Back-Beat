@@ -68,12 +68,12 @@ def findOldBackups(backupPath: str) -> dict:
   """
   backupList = {}
   # List all subdirectory using pathlib
-  basepath = Path(backupPath + "\\")
+  basepath = Path(backupPath + "/")
   i = 0
   for entry in basepath.iterdir():
     if entry.is_dir():
       i += 1
-      folderName = backupPath + '\\' + entry.name 
+      folderName = backupPath + "/" + entry.name 
       backupList[str(i)] = folderName
   return backupList
 
@@ -111,7 +111,7 @@ def push() -> None:
   source = cfg['beatSaberPath']
   destination = cfg['backupPath']
   dt = str(datetime.datetime.now().strftime("%Y%m%d%H%M"))
-  target = destination + "\\" + dt
+  target = destination + "/" + dt
   copyFolders(source, target)
   backups = findOldBackups(destination)
   backup_count = len(backups)
@@ -207,7 +207,7 @@ try:
   main()
 except SystemExit:
   print("")
-else:
+except Exception:
   txt = "An Error occurred!\n"
   txt += str(sys.exc_info()[0])
   txt += "\nDetails:\n"
