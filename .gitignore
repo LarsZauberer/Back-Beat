@@ -124,3 +124,6 @@ dmypy.json
 
 # my stuff
 config.txt
+
+# Visual Studio Code settings
+.vscode/
