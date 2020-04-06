@@ -162,6 +162,14 @@ def pull() -> None:
     return None
 
 
+def backslash_to_slash(adress: str) -> str:
+    adress = list(adress)
+    for i in range(len(adress)):
+        if adress[i] == bytes([92]).decode("utf-8"):
+            adress[i] = "/"
+    return "".join(adress)
+
+
 def create_config() -> None:
     """
     Init Funktion
@@ -172,7 +180,9 @@ def create_config() -> None:
     try:
         with open("config.json", "w") as f:
             beat_saber = input("Beat Saber Folder: ")
+            beat_saber = backslash_to_slash(beat_saber)
             backupfolder = input("Backupfolder Location: ")
+            backupfolder = backslash_to_slash(backupfolder)
             file_json = {"beatSaberPath": beat_saber, "backupPath": backupfolder, "backups": {}}
             json.dump(file_json, f)
     except Exception as e:
