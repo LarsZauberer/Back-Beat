@@ -145,18 +145,41 @@ def pull() -> None:
             print("Invalid selection, please numbers only")
             sys.exit()
         if selection <= backup_count:
+            source = backups[str(selection)]
             if os.path.exists(beat_saber_loc):
-                shutil.rmtree(beat_saber_loc)
-            source = backups[selection]
-            shutil.copytree(source, beat_saber_loc)
+                try:
+                    shutil.rmtree(beat_saber_loc)
+                except Exception as ex:
+                    print(ex.message)
+            copyFolders(source, beat_saber_loc)
             print("Restore successfull")
             backup_count = 0
         elif selection == 0:
-            sys.exit()
+            backup_count = 0
         else:
             print("Invalid selection, please only listed numbers")
     write_config(beat_saber_loc, backup_loc)
     return None
+
+
+def create_config() -> None:
+    """
+    Init Funktion
+    Create a new config and saves
+
+    Return: None
+    """
+    try:
+        with open("config.json", "w") as f:
+            beat_saber = input("Beat Saber Folder: ")
+            backupfolder = input("Backupfolder Location: ")
+            file_json = {"beatSaberPath": beat_saber, "backupPath": backupfolder, "backups": {}}
+            json.dump(file_json, f)
+    except Exception as e:
+        print("Error while creating the config file")
+        print(f"Windows {e.winerror} Error:\t{e.strerror}")
+    finally:
+        return None
 
 
 def main() -> None:
@@ -169,7 +192,7 @@ def main() -> None:
                                      epilog='Thanks for using this backup tool')
     parser.version = '1.1'
     parser.add_argument('-i', '--importtype', dest='importtype', type=int,
-                        action='append', nargs='+', choices=range(1, 2),
+                        action='append', nargs='+', choices=range(1, 3),
                         help='Typ of backup')
     parser.add_argument('-o', '--out', '--push', dest='importtype',
                         action='append_const', const=1,
@@ -182,6 +205,9 @@ def main() -> None:
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='logging and debug is activated')
     parser.add_argument('--version', action='version')
+    parser.add_argument('--init', dest='importtype',
+                        action='append_const', const=3,
+                        help='Initiates a new config file')
     args = parser.parse_args()
     # checking the logging options
     """ if args.debug:
@@ -204,7 +230,8 @@ def main() -> None:
 task = 0
 dispatch = {
     1: push,
-    2: pull
+    2: pull,
+    3: create_config,
 }
 
 # Here start the real code for this program to run
