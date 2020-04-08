@@ -2,46 +2,265 @@ import os
 import sys
 import shutil
 import datetime
-import pickle
+import json
+import argparse
+from pathlib import Path
 
+
+def read_config() -> dict:
+    """
+    read_config
+    Read the JSON config file.
+
+    Returns:
+        dict: dictionary object of the config settings
+    """
+    configInfo = {}
+    try:
+        with open("config.json", 'r') as readFile:
+            data = json.load(readFile)
+    except Exception:
+        print("Can't open config file")
+        sys.exit()
+    finally:
+        configInfo = data
+        return configInfo
+
+
+def write_config(path1: str, path2: str) -> None:
+    """
+    write_config
+    Write to the config file the configuration settings. Paths and Backuplist.
+
+    Args:
+        path1 (string): Beat Saber Path
+        path2 (string): Path to Backuplocation
+    """
+    configInfo = {}
+    configInfo['beatSaberPath'] = path1
+    configInfo['backupPath'] = path2
+    configInfo['backups'] = findOldBackups(path2)
+    with open("config.json", "w") as writeFile:
+        json.dump(configInfo, writeFile)
+
+
+def verify_backup_path(backupPath: str) -> None:
+    """
+    verify_backup_path
+    Verifies that the path to backup location exists and if not creates it.
+
+    Args:
+        backupPath (string): Path to Backuplocation
+    """
+    if not os.path.exists(backupPath):
+        os.mkdir(backupPath)
+
+
+def findOldBackups(backupPath: str) -> dict:
+    """
+    findOldBackups
+    Look up for existing folders in the Backuplocation
+
+    Args:
+        backupPath (string): Path to Backuplocation
+
+    Returns:
+        dict: dictionary listing of existing Backups
+    """
+    backupList = {}
+    # List all subdirectory using pathlib
+    basepath = Path(backupPath + "/")
+    i = 0
+    for entry in basepath.iterdir():
+        if entry.is_dir():
+            i += 1
+            folderName = backupPath + "/" + entry.name
+            backupList[str(i)] = folderName
+    return backupList
+
+
+def copyFolders(source: str, destination: str) -> None:
+    """
+    copyFolders
+    Filelevel copy from the Source directory to the Destination directory
+
+    Args:
+        source (string): Source directory path
+        destination (string): Destination directory path
+    """
+    print(f"Copy files from {source} to {destination}")
+    try:
+        shutil.copytree(source, destination)
+    except OSError as e:
+        print("Error while trying to copy files")
+        print(f"Windows {e.winerror} Error:\t{e.strerror}")
+        print(f"File1:\t{e.filename}\nFile2:\t{e.filename2}")
+    return None
+
+
+def push() -> None:
+    """
+    push
+    Creates a backup for Beat Saber in the configured location with the actual date
+
+    Returns:
+        None: -
+    """
+    print("Startin PUSH")
+    backup_count = 0
+    cfg = read_config()
+    source = cfg['beatSaberPath']
+    destination = cfg['backupPath']
+    dt = str(datetime.datetime.now().strftime("%Y%m%d%H%M"))
+    target = destination + "/" + dt
+    copyFolders(source, target)
+    backups = findOldBackups(destination)
+    backup_count = len(backups)
+    print(f"You have now {backup_count} backups.")
+    write_config(source, destination)
+    return None
+
+
+def pull() -> None:
+    """
+    pull
+    Restore a selected backup for Beat Saber
+
+    Returns:
+        None: -
+    """
+    print("Startin PULL")
+    backup_count = 0
+    cfg = read_config()
+    beat_saber_loc = cfg['beatSaberPath']
+    backup_loc = cfg['backupPath']
+    backups = findOldBackups(backup_loc)
+    backup_count = len(backups)
+    while backup_count > 0:
+        for entry in backups:
+            print(f"{entry}\t{backups[entry]}")
+        try:
+            selection = int(input("Which one do you like to pull from (select number 1-x) or 0 for exit: "))
+        except Exception:
+            print("Invalid selection, please numbers only")
+            sys.exit()
+        if selection <= backup_count:
+            source = backups[str(selection)]
+            if os.path.exists(beat_saber_loc):
+                try:
+                    shutil.rmtree(beat_saber_loc)
+                except Exception as ex:
+                    print(ex.message)
+            copyFolders(source, beat_saber_loc)
+            print("Restore successfull")
+            backup_count = 0
+        elif selection == 0:
+            backup_count = 0
+        else:
+            print("Invalid selection, please only listed numbers")
+    write_config(beat_saber_loc, backup_loc)
+    return None
+
+
+def backslash_to_slash(adress: str) -> str:
+    adress = list(adress)
+    for i in range(len(adress)):
+        if adress[i] == bytes([92]).decode("utf-8"):
+            adress[i] = "/"
+    return "".join(adress)
+
+
+def create_config() -> None:
+    """
+    Init Funktion
+    Create a new config and saves
+
+    Return: None
+    """
+    try:
+        with open("config.json", "w") as f:
+            beat_saber = input("Beat Saber Folder: ")
+            beat_saber = backslash_to_slash(beat_saber)
+            backupfolder = input("Backupfolder Location: ")
+            backupfolder = backslash_to_slash(backupfolder)
+            file_json = {"beatSaberPath": beat_saber, "backupPath": backupfolder, "backups": {}}
+            json.dump(file_json, f)
+    except Exception as e:
+        print("Error while creating the config file")
+        print(f"Windows {e.winerror} Error:\t{e.strerror}")
+    finally:
+        return None
+
+
+def main() -> None:
+    """
+    main
+    Program to pars the parameters and run it through
+    """
+    # Parsing parameters
+    parser = argparse.ArgumentParser(description='Backup Beat Saber',
+                                     epilog='Thanks for using this backup tool')
+    parser.version = '1.1'
+    parser.add_argument('-i', '--importtype', dest='importtype', type=int,
+                        action='append', nargs='+', choices=range(1, 3),
+                        help='Typ of backup')
+    parser.add_argument('-o', '--out', '--push', dest='importtype',
+                        action='append_const', const=1,
+                        help='create a new backup')
+    parser.add_argument('-p', '--pull', dest='importtype',
+                        action='append_const', const=2,
+                        help='restore from a backup')
+    parser.add_argument('-d', '--debug', action='store_true', help='activate debug')
+    # parser.add_argument('-l', '--log', action='store_true', help='activate logging')
+    # parser.add_argument('-v', '--verbose', action='store_true',
+    #                     help='logging and debug is activated')
+    parser.add_argument('--version', action='version')
+    parser.add_argument('--init', dest='importtype',
+                        action='append_const', const=3,
+                        help='Initiates a new config file')
+    args = parser.parse_args()
+    # checking the logging options
+    """ if args.debug:
+        DEBUG = True
+        print("Commandline switches Debugging ON")
+    if args.log:
+        LOG = True
+        print("Commandline switches Logging ON")
+    if args.verbose:
+        DEBUG = True
+        LOG = True
+        print("Commandline switches Logging and Debugging ON") """
+    # Doing the actual work
+    for task in args.importtype:
+        dispatch[task]()
+    return None
+
+
+# Variable definition
+task = 0
+dispatch = {
+    1: push,
+    2: pull,
+    3: create_config,
+}
+
+# Here start the real code for this program to run
+time_start = datetime.datetime.now()
+print(f'===== START ===== [{time_start}]')
 try:
-    with open("config.txt", 'r') as f:
-        content = f.read()
-        print(content)
-        beat_saber_loc = content.split(", ")[0]
-        backup_loc = content.split(", ")[1]
-except:
-    print("Can't open config file")
-    sys.exit()
-
-if not os.path.exists(backup_loc):
-    os.mkdir(backup_loc)
-
-try:
-    with open(backup_loc+"\\backups.txt", 'rb') as f:
-        dates = pickle.load(f)
-except:
-    with open(backup_loc+"\\backups.txt", 'wb') as f:
-        dates = []
-
-BE = input("Push/Pull: ")
-if BE == "Push":
-    backup_count = []
-    for i in dates:
-        if str(datetime.date.today()) in i:
-            backup_count.append(i)
-    shutil.copytree(beat_saber_loc, backup_loc+"\\"+ str(datetime.date.today()) + "_" + str(int(len(backup_count)+1)))
-    dates.append(str(datetime.date.today()) + "_" + str(int(len(backup_count)+1)))
-elif BE == "Pull":
-    for i in dates:
-        print (i)
-    date = input("Which one do you like to pull from: ")
-    if date in dates:
-        if os.path.exists(beat_saber_loc):
-            shutil.rmtree(beat_saber_loc)
-        shutil.copytree(backup_loc+"\\"+date, beat_saber_loc)
-    else:
-        print("Invalid Date")
-
-with open(backup_loc+"\\backups.txt", 'wb') as f:
-    pickle.dump(dates, f)
+    main()
+except SystemExit:
+    print("")
+except KeyError:
+    print("")
+except Exception:
+    txt = "An Error occurred!\n"
+    txt += str(sys.exc_info()[0])
+    txt += "\nDetails:\n"
+    txt += str(sys.exc_info()[2])
+    print(txt)
+finally:
+    time_end = datetime.datetime.now()
+    print(f'===== STOP ===== [{time_end}]')
+    duration = time_end - time_start
+    print(f'Duration = [{duration}]')

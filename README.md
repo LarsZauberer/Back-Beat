@@ -1,14 +1,17 @@
-# Beatup
+# Back-Beat
 
-## Main.py
-My first attempt
+## Installation and Usage
+Download the latest version of Back-Beat: https://github.com/LarsZauberer/Back-Beat/releases
+<br>
+Unzip the file and start the init.bat file.
+Now you can use the other files to create or restore backups
 
-## main_gw.py
+## main.py
 Recreated the script with modules/functions and command line arguments
 Usage is shown with the '--help' parameter.
 
 ``` bash
-usage: main_gw.py [-h] [-i {1} [{1} ...]] [-o] [-p] [-d] [-l] [-v] [--version]
+usage: main.py [-h] [-i {1} [{1} ...]] [-o] [-p] [-d] [-l] [-v] [--version]
 
 Backup Beat Saber
 
@@ -19,9 +22,6 @@ optional arguments:
   -o, --out, --push     create a new backup
   -p, --pull            restore from a backup
   -d, --debug           activate debug
-  -l, --log             activate logging
-  -v, --verbose         logging and debug is activated
-  --version             show program's version number and exit
-
-Thanks for using this backup tool
+  --version             show program version number and exit
 ```
+Thanks for using this backup tool
