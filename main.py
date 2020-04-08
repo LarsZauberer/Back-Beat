@@ -211,9 +211,9 @@ def main() -> None:
                         action='append_const', const=2,
                         help='restore from a backup')
     parser.add_argument('-d', '--debug', action='store_true', help='activate debug')
-    parser.add_argument('-l', '--log', action='store_true', help='activate logging')
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='logging and debug is activated')
+    # parser.add_argument('-l', '--log', action='store_true', help='activate logging')
+    # parser.add_argument('-v', '--verbose', action='store_true',
+    #                     help='logging and debug is activated')
     parser.add_argument('--version', action='version')
     parser.add_argument('--init', dest='importtype',
                         action='append_const', const=3,
